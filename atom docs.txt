@@ -1,0 +1,137 @@
+Atom project
+
+Patchin comands
+
+sudo su 
+yum history
+yum update -y
+ needs -restarting -r
+needs-restarting-s
+yum history list
+==============================
+To delete single pods
+
+1. Login to bastion 
+
+2. Connect to gcloud 
+
+gcloud container clusters get-credentials <cluster> --region europe-west2 --project <env name> 
+
+3. Run kubectl get deployment -n <namespace> 
+4. Run kubectl get pods -n <namespace> 
+
+4.Run kubectl delete deployment <deployment_name> -n <namespace> 
+
+kubectl get deployment -n <namespace> 
+kubectl get pods -n <namespace>  
+
+To delete multiple Pods in the cluster 
+
+kubectl delete --all deployments --namespace=<namespace> 
+
+kubectl get deployment -n <namespace> 
+kubectl get pods -n <namespace>
+==================================================================
+To create Datadog dashboards
+
+1. select your visualixation : Query Value
+
+2. Graph your data :host:*ednp-proxy-out* *185.121.250.137* ("timed out" OR failed)
+if value >=10
+if value >=5
+if value >=3
+
+3.set display preferences global time
+====================================================================
+To create Monitors in Datadog for alerting
+
+host:*proxy\-out\-euw2*10.33.60.2 ("timed out" OR failed)
+
+Proxy-Out is having problems connecting to dm.stub
+
+The Proxy-Out logs contain errors connecting to dm.stub (dm-de11.atomfintec.com) @teams-EDNP
+{{#is_exact_match "env.name" "ednp"}}
+  {{#is_alert}} @teams-EDNP -dm.stub connectivity is DOWN {{/is_alert}} 
+  {{#is_recovery}} @teams-EDNP -dm.stub  connectivity is UP  {{/is_recovery}}
+{{/is_exact_match}
+=====================================================================
+To update certs all together for all sdervices by sshing into bastion
+
+ssh into bastion --->
+
+sudo su ---> 
+
+gcloud container clusters get-credentials shared-gke-de11-euw2 --region europe-west2 --project ab-banking-de11 --->
+
+
+vi certupdate.sh --->
+https://gitlab.nonprod.internal.atomfintec.com/ci-cd/scripts/-/blob/develop/Update-microservice-certificates/Update_Microservice_certs.sh
+
+chmod +x certupdate.sh --->
+ 
+./certupdate.sh --->
+
+SECRETS=`kubectl get secrets --all-namespaces | grep cert | grep Opaque | awk '{print $1 "," $2}'`
+echo "Namespace,Secret,Expires"
+for line in $SECRETS
+do
+#echo $line
+NS=$(echo $line | cut -d ',' -f1)
+SEC=$(echo $line | cut -d ',' -f2)
+EXP=$(kubectl -n $NS get secret $SEC -o jsonpath='{.data}' | jq ' ."tls.crt"' | tr -d '"' | base64 -d | openssl x509 -enddate -noout)
+echo $line "," $EXP
+done
+
+ls -ltra (to get output file)
+================================================================================
+To create feature branch and push edited file to gitlab
+
+   sudo su
+   git clone      git@gitlab.nonprod.internal.atomfintec.com:ci-cd/terraform-banking-vars.git
+    ls
+   cd terraform-banking-vars/
+   git checkout -b feature/SRE-7320
+   git status
+    git add .
+   git status
+  git commit -m "updated ip in L65"
+ git status
+ git push --set-upstream origin featureture/SRE-7320
+  exit
+run jenkins build job finally
+=======================================================================
+To restart pods in gke bastion
+
+kubectl -n event-orchestration get pods
+kubectl -n party-master get pods
+
+
+kubectl -n <name-space> delete po <pod-name>
+
+kubectl -n event-orchestration describe pod device-orchestration-84658455f5-4p9rv
+
+kubectl -n namespace describe pod podname
+
+kubectl get configmap
+kubectl get secret
+
+(to delete and get new pod)
+----------------------------------------------
+kubectl -n event-orchestration logs pod/device-orchestration-7c98476c4d-rq4hn --container device-orchestration
+--------------------------------------------------
+To restart/scale up and scale down pods in gke bastion:
+
+kubectl scale deployment party-sync-adapter --replicas=0 -n party-master
+
+kubectl scale deployment <pod> --replicas=3 -n <namespace>
+
+or
+
+kubectl -n party-master delete po party-sync-adapter-5dc55597f7-5w88x
+--------------------------------------------------
+kubectl logs funding-orchestration-546497c6c5-67vwp
+
+
+
+kubectl describe device-orchestration-7c98476c4d-7tlz5 pod-missing-config
+====================================================================================
